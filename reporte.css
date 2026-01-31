@@ -1,0 +1,950 @@
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #FBFBFA; color: #37352F; }
+        
+        .form-card { background: white; border-radius: 1.5rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .section-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .section-title::after { content: ""; flex: 1; height: 1px; background: #f3f4f6; }
+        
+        .input-group label { display: block; 
+            font-size: 0.75rem;
+             font-weight: 700; 
+             color: #4b5563; 
+             margin-bottom: 0.5rem; }
+
+        .input-field { width: 100%;
+        background: #f9fafb; 
+        border: 1px solid #e5e7eb;
+         border-radius: 0.75rem;
+          padding: 0.6rem 0.8rem;
+           font-size: 0.85rem;
+            transition: all 0.2s; }
+
+        .input-field:focus {
+             outline: none; border-color: #1e40af; background: white; ring: 2px solid #1e40af20; }
+        
+        /* Contenedor especial para el input con icono */
+        .input-with-icon { position: relative; display: flex; align-items: center; }
+        .input-with-icon i { position: absolute; left: 1rem; color: #1f99db; font-size: 1.1rem; }
+        .input-with-icon input { padding-left: 2.8rem; }
+
+        .select-btn { transition: all 0.1s; border: 1px solid #e5e7eb; font-weight: 600; cursor: pointer; user-select: none; background: white; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; font-size: 10px; padding: 4px; height: 32px; }
+        .select-btn.active { background-color: #1e40af; color: white; border-color: #1e40af; }
+        
+        .rule-badge { background: white; border: 1px solid #e5e7eb; padding: 8px 12px; border-radius: 10px; display: flex; align-items: center; justify-content: justify-between; gap: 8px; font-size: 11px; font-weight: 600; }
+        .hito-card { border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1rem; background: #ffffff; }
+
+        .btn-primary { background: #1e40af; color: white; padding: 0.8rem 2rem; border-radius: 0.75rem; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }
+        .btn-primary:hover { background: #1e3a8a; transform: translateY(-1px); }
+        .btn-add { background: #eff6ff; color: #1e40af; padding: 6px 12px; border-radius: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; border: 1px solid #dbeafe; }
+/* ===============================
+   INFO BÁSICA - COMPACTA
+   =============================== */
+
+.info-basica-grid {
+    gap: 1rem;
+}
+
+.info-basica-grid .input-group {
+    margin-bottom: 0;
+}
+
+.info-basica-grid label {
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+}
+
+.info-basica-grid .input-field {
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+}
+
+/* Tarjetas menos altas */
+.form-card {
+    padding: 1.5rem !important;
+}
+
+/* Menos espacio entre secciones */
+.grid.gap-6 {
+    gap: 1.25rem !important;
+}
+
+/* Botones compactos */
+.btn-primary,
+button {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+}
+
+
+/* ============================================================================
+   REPORTES.CSS - Estilos adicionales para dependencias en formulario
+   ============================================================================ */
+
+/* ============================================================================
+   SECCIÓN DE DEPENDENCIAS
+   ============================================================================ */
+
+.section-header-with-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.section-hint {
+    font-size: 12px;
+    color: #64748b;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.section-hint i {
+    color: #94a3b8;
+}
+
+.dependencies-section {
+    margin-bottom: 28px;
+}
+
+.dependencies-section:last-child {
+    margin-bottom: 0;
+}
+
+.dependency-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.dependency-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.dependency-title i {
+    color: #1e40af;
+    font-size: 18px;
+}
+
+.btn-add-dependency {
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.btn-add-dependency:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
+
+.dependency-description {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0 0 16px 0;
+    font-style: italic;
+}
+
+.dependency-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+    margin: 28px 0;
+}
+
+/* ============================================================================
+   LISTA DE DEPENDENCIAS
+   ============================================================================ */
+
+.dependencies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.empty-dependencies {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 2px dashed #cbd5e1;
+}
+
+.empty-dependencies i {
+    font-size: 32px;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+}
+
+.empty-dependencies p {
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 0;
+    font-style: italic;
+}
+
+/* ============================================================================
+   ITEM DE DEPENDENCIA
+   ============================================================================ */
+
+.dependency-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-left: 4px solid #1e40af;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.dependency-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-left-color: #10b981;
+}
+
+.dependency-info {
+    flex: 1;
+}
+
+.dependency-code {
+    font-size: 11px;
+    font-weight: 800;
+    color: #1e40af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.dependency-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 10px;
+    line-height: 1.3;
+}
+
+.dependency-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.dependency-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.dependency-tag.tipo {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.dependency-tag.criticidad-alta {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.dependency-tag.criticidad-media {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.dependency-tag.criticidad-baja {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.dependency-obs {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border-left: 3px solid #cbd5e1;
+    display: flex;
+    gap: 8px;
+}
+
+.dependency-obs i {
+    color: #94a3b8;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* ============================================================================
+   ACCIONES DE DEPENDENCIA
+   ============================================================================ */
+
+.dependency-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-remove-dependency {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: #fee2e2;
+    color: #dc2626;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-remove-dependency:hover {
+    background: #dc2626;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* ============================================================================
+   DEPENDENCIAS NO VALIDADAS (para visualización)
+   ============================================================================ */
+
+.dependency-item.no-validada {
+    border-left-color: #f59e0b;
+    border-style: dashed;
+    opacity: 0.85;
+}
+
+.dependency-item.no-validada::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(245, 158, 11, 0.05) 10px,
+        rgba(245, 158, 11, 0.05) 20px
+    );
+    pointer-events: none;
+    border-radius: 10px;
+}
+
+.badge-no-validada {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+.badge-no-validada i {
+    font-size: 12px;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .section-header-with-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .dependency-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .btn-add-dependency {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .dependency-item {
+        flex-direction: column;
+    }
+    
+    .dependency-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* ============================================================================
+   AGREGAR ESTE CSS A: reportes.css
+   ============================================================================
+   Estilos para la sección de dependencias en el formulario de crear reporte
+   ============================================================================ */
+
+/* Header con acciones */
+.section-header-with-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.section-hint {
+    font-size: 12px;
+    color: #64748b;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+/* Sección de dependencias */
+.dependencies-section {
+    margin-bottom: 28px;
+}
+
+.dependency-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.dependency-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.dependency-title i {
+    color: #1e40af;
+}
+
+.btn-add-dependency {
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.btn-add-dependency:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
+
+.dependency-description {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0 0 16px 0;
+    font-style: italic;
+}
+
+.dependency-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+    margin: 28px 0;
+}
+
+/* Lista de dependencias */
+.dependencies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.empty-dependencies {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 2px dashed #cbd5e1;
+}
+
+.empty-dependencies i {
+    font-size: 32px;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+}
+
+.empty-dependencies p {
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 0;
+    font-style: italic;
+}
+
+/* Item de dependencia */
+.dependency-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-left: 4px solid #1e40af;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.dependency-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-left-color: #10b981;
+}
+
+.dependency-info {
+    flex: 1;
+}
+
+.dependency-code {
+    font-size: 11px;
+    font-weight: 800;
+    color: #1e40af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.dependency-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 10px;
+    line-height: 1.3;
+}
+
+.dependency-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.dependency-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.dependency-tag.tipo {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.dependency-tag.criticidad-alta {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.dependency-tag.criticidad-media {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.dependency-tag.criticidad-baja {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.dependency-obs {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border-left: 3px solid #cbd5e1;
+    display: flex;
+    gap: 8px;
+}
+
+.dependency-obs i {
+    color: #94a3b8;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* Acciones de dependencia */
+.dependency-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-remove-dependency {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: #fee2e2;
+    color: #dc2626;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-remove-dependency:hover {
+    background: #dc2626;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 2999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-container.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.modal-header {
+    padding: 24px 28px;
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    color: white;
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-close-modal {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-close-modal:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.modal-body {
+    padding: 28px;
+    overflow-y: auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0f172a;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    font-family: inherit;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: #64748b;
+    border: 2px solid #cbd5e1;
+}
+
+.btn-secondary:hover {
+    background: #f8fafc;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .section-header-with-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .dependency-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .btn-add-dependency {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .dependency-item {
+        flex-direction: column;
+    }
+    
+    .dependency-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+
+
+/* ============================================================================
+   AGREGAR AL FINAL DE reportes.css
+   ============================================================================
+   Estilos para dependencias split-view y consideraciones
+   ============================================================================ */
+
+/* Labels de dependencias */
+.dep-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #1e40af;
+    margin-bottom: 6px;
+}
+
+.dep-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #bfdbfe;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.dep-input:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+/* Items de dependencias en la lista */
+.dep-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-left: 4px solid #10b981;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.dep-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-left-color: #059669;
+}
+
+.dep-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.dep-badge.tipo {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.dep-badge.crit-alta {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.dep-badge.crit-media {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.dep-badge.crit-baja {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.dep-remove {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: none;
+    background: #fee2e2;
+    color: #dc2626;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dep-remove:hover {
+    background: #dc2626;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+    .dep-item {
+        flex-direction: column;
+    }
+    
+    .dep-remove {
+        width: 100%;
+        height: 36px;
+    }
+}
