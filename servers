@@ -1,0 +1,439 @@
+"""
+Servicio de Reportes - Lógica de Negocio
+Maneja generación de códigos, cálculo de plazos, alertas y logs
+"""
+
+from datetime import datetime, timedelta
+import json
+from db import get_connection
+
+
+class ReporteService:
+    """Servicio para gestionar la lógica de negocio de reportes"""
+    
+    # Configuración de alertas por frecuencia (horas antes)
+    ALERTAS_CONFIG = {
+        'DIARIA': 1,      # 1 hora antes
+        'SEMANAL': 72,    # 3 días antes
+        'MENSUAL': 120,   # 5 días antes
+        'TRIMESTRAL': 192,  # 8 días antes
+        'SEMESTRAL': 336,  # 14 días antes
+        'ANUAL': 720      # 30 días antes
+    }
+    
+    @staticmethod
+    def generar_codigo_interno(tipo_id):
+        """
+        Genera código interno automático seguro por prefijo
+        Ejemplo: RS-0001, RS-0002...
+        """
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        try:
+            # Iniciar transacción
+            conn.start_transaction()
+
+            # Obtener prefijo del tipo
+            cursor.execute("""
+                SELECT prefijo_codigo 
+                FROM tipo_reporte 
+                WHERE id_tipo = %s
+                FOR UPDATE
+            """, (tipo_id,))
+            
+            tipo = cursor.fetchone()
+            if not tipo:
+                raise ValueError(f"Tipo de reporte {tipo_id} no encontrado")
+
+            prefijo = tipo["prefijo_codigo"]
+            if not prefijo:
+                raise ValueError(f"Tipo {tipo_id} no tiene prefijo configurado")
+
+            # Obtener último código generado para ese prefijo
+            cursor.execute("""
+                SELECT codigo_interno 
+                FROM reporte 
+                WHERE codigo_interno LIKE %s
+                ORDER BY codigo_interno DESC
+                LIMIT 1
+                FOR UPDATE
+            """, (f"{prefijo}-%",))
+
+            ultimo = cursor.fetchone()
+
+            # Calcular siguiente número
+            if ultimo:
+                ultimo_num = int(ultimo["codigo_interno"].split("-")[1])
+                nuevo_num = ultimo_num + 1
+            else:
+                nuevo_num = 1
+
+            # Formatear código
+            nuevo_codigo = f"{prefijo}-{nuevo_num:04d}"
+
+            conn.commit()
+
+            print(f"🔢 Código generado: {nuevo_codigo}")
+            return nuevo_codigo
+
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    
+    @staticmethod
+    def calcular_proxima_ejecucion(frecuencia, reglas_json):
+        """
+        Calcula la próxima fecha de ejecución con soporte para:
+        - Reglas dinámicas (días específicos de semana/mes)
+        - Ciclos fijos (hitos anuales)
+        - Festivos Colombia 🇨🇴
+        - Días laborales
+        
+        Args:
+            frecuencia: DIARIA, SEMANAL, MENSUAL, etc.
+            reglas_json: JSON con reglas específicas
+            
+        Returns:
+            datetime: Próxima ejecución calculada
+        """
+        ahora = datetime.now()
+        
+        # Festivos Colombia 2026 (se pueden cargar desde BD en producción)
+        FESTIVOS_2026 = [
+            datetime(2026, 1, 1),   # Año Nuevo
+            datetime(2026, 1, 12),  # Reyes Magos
+            datetime(2026, 3, 23),  # San José
+            datetime(2026, 4, 9),   # Jueves Santo
+            datetime(2026, 4, 10),  # Viernes Santo
+            datetime(2026, 5, 1),   # Día del Trabajo
+            datetime(2026, 5, 25),  # Ascensión
+            datetime(2026, 6, 15),  # Corpus Christi
+            datetime(2026, 6, 22),  # Sagrado Corazón
+            datetime(2026, 6, 29),  # San Pedro y San Pablo
+            datetime(2026, 7, 20),  # Día de la Independencia
+            datetime(2026, 8, 7),   # Batalla de Boyacá
+            datetime(2026, 8, 17),  # Asunción
+            datetime(2026, 10, 12), # Día de la Raza
+            datetime(2026, 11, 2),  # Todos los Santos
+            datetime(2026, 11, 16), # Independencia de Cartagena
+            datetime(2026, 12, 8),  # Inmaculada Concepción
+            datetime(2026, 12, 25), # Navidad
+        ]
+        
+        def es_dia_laboral(fecha):
+            """Verifica si es día laboral (lun-vie, no festivo)"""
+            if fecha.weekday() >= 5:  # Sábado=5, Domingo=6
+                return False
+            fecha_solo = fecha.replace(hour=0, minute=0, second=0, microsecond=0)
+            return fecha_solo not in [f.replace(hour=0, minute=0, second=0, microsecond=0) for f in FESTIVOS_2026]
+        
+        def siguiente_dia_laboral(fecha):
+            """Obtiene el siguiente día laboral"""
+            siguiente = fecha
+            while not es_dia_laboral(siguiente):
+                siguiente += timedelta(days=1)
+            return siguiente
+        
+        try:
+            reglas = json.loads(reglas_json) if reglas_json else []
+        except:
+            reglas = []
+        
+        # ===== REGLAS DINÁMICAS =====
+        if reglas and len(reglas) > 0:
+            primera_regla = reglas[0]
+            hora_str = primera_regla.get('time') or primera_regla.get('hora', '08:00')
+            
+            try:
+                hora, minuto = map(int, hora_str.split(':'))
+            except:
+                hora, minuto = 8, 0
+            
+            if primera_regla.get('type') == 'dynamic':
+                freq = primera_regla.get('freq')
+                
+                # ----- DIARIA -----
+                if freq == 'diaria':
+                    proxima = ahora.replace(hour=hora, minute=minuto, second=0, microsecond=0)
+                    if proxima <= ahora:
+                        proxima += timedelta(days=1)
+                    # Ajustar a día laboral si es necesario
+                    proxima = siguiente_dia_laboral(proxima)
+                    return proxima
+                
+                # ----- SEMANAL -----
+                elif freq == 'semanal':
+                    dias_semana = primera_regla.get('weeks', [])
+                    if dias_semana:
+                        # 0=Lunes, 1=Martes, ..., 6=Domingo
+                        dia_actual = ahora.weekday()
+                        
+                        # Buscar próximo día válido
+                        for offset in range(1, 8):
+                            dia_candidato = (dia_actual + offset) % 7
+                            if dia_candidato in dias_semana:
+                                dias_hasta = offset
+                                proxima = ahora + timedelta(days=dias_hasta)
+                                proxima = proxima.replace(hour=hora, minute=minuto, second=0, microsecond=0)
+                                
+                                # Verificar si es laboral
+                                if es_dia_laboral(proxima):
+                                    return proxima
+                
+                # ----- MENSUAL -----
+                elif freq == 'mensual':
+                    dias_mes = primera_regla.get('days', [])
+                    if dias_mes:
+                        dia_objetivo = min(dias_mes)
+                        
+                        # Intentar este mes
+                        if ahora.day < dia_objetivo:
+                            try:
+                                proxima = ahora.replace(day=dia_objetivo, hour=hora, minute=minuto, second=0, microsecond=0)
+                                return siguiente_dia_laboral(proxima)
+                            except ValueError:
+                                pass  # Día no válido para este mes
+                        
+                        # Próximo mes
+                        if ahora.month == 12:
+                            proxima = ahora.replace(year=ahora.year+1, month=1, day=1)
+                        else:
+                            proxima = ahora.replace(month=ahora.month+1, day=1)
+                        
+                        try:
+                            proxima = proxima.replace(day=dia_objetivo, hour=hora, minute=minuto, second=0, microsecond=0)
+                            return siguiente_dia_laboral(proxima)
+                        except ValueError:
+                            # Día no existe en ese mes, usar último día
+                            import calendar
+                            ultimo_dia = calendar.monthrange(proxima.year, proxima.month)[1]
+                            proxima = proxima.replace(day=ultimo_dia, hour=hora, minute=minuto, second=0, microsecond=0)
+                            return siguiente_dia_laboral(proxima)
+            
+            # ----- CICLO FIJO (HITOS) -----
+            elif primera_regla.get('type') == 'fixed-cycle':
+                mes = int(primera_regla.get('mes', 0)) + 1  # JS usa 0-11
+                dia = int(primera_regla.get('dia', 1))
+                
+                try:
+                    if ahora.month < mes or (ahora.month == mes and ahora.day < dia):
+                        proxima = ahora.replace(month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0)
+                    else:
+                        proxima = ahora.replace(year=ahora.year+1, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0)
+                    
+                    return siguiente_dia_laboral(proxima)
+                except ValueError:
+                    pass
+        
+        # ===== LÓGICA SIMPLE POR FRECUENCIA (FALLBACK) =====
+        base = ahora.replace(hour=8, minute=0, second=0, microsecond=0)
+        
+        if frecuencia == 'DIARIA':
+            proxima = base + timedelta(days=1)
+            return siguiente_dia_laboral(proxima)
+        elif frecuencia == 'SEMANAL':
+            proxima = base + timedelta(weeks=1)
+            return siguiente_dia_laboral(proxima)
+        elif frecuencia == 'MENSUAL':
+            if ahora.month == 12:
+                proxima = base.replace(year=ahora.year+1, month=1)
+            else:
+                proxima = base.replace(month=ahora.month+1)
+            return siguiente_dia_laboral(proxima)
+        elif frecuencia == 'TRIMESTRAL':
+            proxima = base + timedelta(days=90)
+            return siguiente_dia_laboral(proxima)
+        elif frecuencia == 'SEMESTRAL':
+            proxima = base + timedelta(days=180)
+            return siguiente_dia_laboral(proxima)
+        elif frecuencia == 'ANUAL':
+            proxima = base.replace(year=ahora.year+1)
+            return siguiente_dia_laboral(proxima)
+        else:
+            return None
+    
+    @staticmethod
+    def calcular_estado_entrega(proxima_ejecucion, frecuencia):
+        """
+        Calcula el estado de entrega basado en la próxima ejecución
+        
+        Args:
+            proxima_ejecucion: datetime de próxima ejecución
+            frecuencia: DIARIA, SEMANAL, etc.
+            
+        Returns:
+            str: 'EN_TIEMPO', 'PROXIMO_VENCER', 'RETRASADO'
+        """
+        if not proxima_ejecucion:
+            return 'EN_TIEMPO'
+        
+        ahora = datetime.now()
+        
+        # Si ya pasó la fecha
+        if ahora > proxima_ejecucion:
+            return 'RETRASADO'
+        
+        # Calcular horas hasta vencimiento
+        horas_restantes = (proxima_ejecucion - ahora).total_seconds() / 3600
+        
+        # Obtener umbral de alerta para esta frecuencia
+        umbral_horas = ReporteService.ALERTAS_CONFIG.get(frecuencia, 24)
+        
+        if horas_restantes <= umbral_horas:
+            return 'PROXIMO_VENCER'
+        
+        return 'EN_TIEMPO'
+    
+    @staticmethod
+    def registrar_log(entidad, entidad_id, accion, descripcion, usuario_id, metadata=None):
+        """
+        Registra un evento en la bitácora
+        
+        Args:
+            entidad: 'REPORTE', 'USUARIO', etc.
+            entidad_id: ID de la entidad
+            accion: Tipo de acción del ENUM
+            descripcion: Descripción del evento
+            usuario_id: ID del usuario que realizó la acción
+            metadata: Dict con información adicional (se guarda como JSON)
+        """
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            metadata_json = json.dumps(metadata) if metadata else None
+            
+            cursor.execute("""
+                INSERT INTO bitacora_evento 
+                (entidad, entidad_id, accion, descripcion, realizado_por, metadata)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (entidad, entidad_id, accion, descripcion, usuario_id, metadata_json))
+            
+            conn.commit()
+            
+        except Exception as e:
+            print(f"Error al registrar log: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def marcar_entregado(reporte_id, usuario_id):
+        """
+        Marca un reporte como entregado y calcula la próxima ejecución
+        
+        Args:
+            reporte_id: ID del reporte
+            usuario_id: ID del usuario que marca como entregado
+        """
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        try:
+            # Obtener datos del reporte
+            cursor.execute("""
+                SELECT r.id_reporte, r.codigo_interno, r.proxima_ejecucion,
+                       s.frecuencia, s.reglas_json
+                FROM reporte r
+                JOIN reporte_schedule s ON r.id_reporte = s.reporte_id
+                WHERE r.id_reporte = %s
+            """, (reporte_id,))
+            
+            reporte = cursor.fetchone()
+            if not reporte:
+                return False
+            
+            ahora = datetime.now()
+            fecha_programada = reporte['proxima_ejecucion']
+            
+            # Calcular minutos de retraso
+            if fecha_programada and ahora > fecha_programada:
+                minutos_retraso = int((ahora - fecha_programada).total_seconds() / 60)
+            else:
+                minutos_retraso = 0
+            
+            # Registrar en historial de entregas
+            cursor.execute("""
+                INSERT INTO historial_entregas 
+                (reporte_id, fecha_programada, fecha_real_entrega, estado, minutos_retraso)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (reporte_id, fecha_programada, ahora, 
+                  'RETRASADO' if minutos_retraso > 0 else 'ENTREGADO', 
+                  minutos_retraso))
+            
+            # Calcular próxima ejecución
+            proxima = ReporteService.calcular_proxima_ejecucion(
+                reporte['frecuencia'], 
+                reporte['reglas_json']
+            )
+            
+            # Actualizar reporte
+            cursor.execute("""
+                UPDATE reporte 
+                SET ultima_entrega = %s,
+                    proxima_ejecucion = %s,
+                    estado_entrega = 'ENTREGADO'
+                WHERE id_reporte = %s
+            """, (ahora, proxima, reporte_id))
+            
+            conn.commit()
+            
+            # Log del evento
+            ReporteService.registrar_log(
+                'REPORTE', reporte_id, 'ENTREGA_GENERADA',
+                f"Reporte {reporte['codigo_interno']} marcado como entregado",
+                usuario_id,
+                {
+                    'fecha_programada': fecha_programada.isoformat() if fecha_programada else None,
+                    'fecha_real': ahora.isoformat(),
+                    'minutos_retraso': minutos_retraso,
+                    'proxima_ejecucion': proxima.isoformat() if proxima else None
+                }
+            )
+            
+            return True
+            
+        except Exception as e:
+            conn.rollback()
+            print(f"Error al marcar entregado: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def obtener_estadisticas_dashboard():
+        """
+        Obtiene estadísticas para el dashboard
+        
+        Returns:
+            dict: Estadísticas de reportes
+        """
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        try:
+            # Estadísticas de estados de entrega
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN estado_entrega = 'RETRASADO' THEN 1 ELSE 0 END) as retrasados,
+                    SUM(CASE WHEN estado_entrega = 'PROXIMO_VENCER' THEN 1 ELSE 0 END) as proximos_vencer,
+                    SUM(CASE WHEN estado_entrega = 'EN_TIEMPO' THEN 1 ELSE 0 END) as en_tiempo,
+                    SUM(CASE WHEN estado_entrega = 'ENTREGADO' THEN 1 ELSE 0 END) as entregados
+                FROM reporte
+            """)
+            
+            stats = cursor.fetchone()
+            return stats
+            
+        finally:
+            cursor.close()
+            conn.close()
