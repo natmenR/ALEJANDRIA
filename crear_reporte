@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Reporte{% endblock %}
+{% block page_title %}Crear Nuevo Reporte{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reportes.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="p-6">
+<div class="max-w-[1800px] mx-auto">
+
+<form method="POST" action="/crear_reporte" class="space-y-6" enctype="multipart/form-data" id="reporteForm">
+
+    <!-- FILA 1: Info Básica + Descripción + Áreas -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Información Básica -->
+        <div class="form-card p-6">
+            <div class="section-title">Información Básica</div>
+            
+            <div class="space-y-4">
+                <div class="input-group">
+                    <label>Nombre del Reporte</label>
+                    <input type="text" name="nombre" class="input-field" required maxlength="150">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label>Tipo</label>
+                        <select name="tipo_id" class="input-field font-semibold" required>
+                            <option value="">Seleccione...</option>
+                            {% for t in tipos %}<option value="{{ t.id_tipo }}">{{ t.nombre }}</option>{% endfor %}
+                        </select>
+                        <p class="text-[10px] text-slate-400 mt-1"><i class="fas fa-info-circle text-blue-500"></i> Código automático</p>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Categoría</label>
+                        <select name="categoria_id" class="input-field">
+                            <option value="">Seleccione...</option>
+                            {% for c in categorias %}<option value="{{ c.id_categoria }}">{{ c.nombre }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Criticidad</label>
+                    <select name="criticidad" class="input-field font-semibold">
+                        {% for val in criticidad_e %}<option value="{{ val }}" {% if val == 'MEDIA' %}selected{% endif %}>{{ val|capitalize }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-card p-6">
+            <div class="section-title">Descripción</div>
+            <div class="space-y-4">
+                <div class="input-group">
+                    <label>Propósito</label>
+                    <textarea name="proposito" rows="2" class="input-field" placeholder="¿Para qué se genera?" maxlength="300"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Descripción Detallada</label>
+                    <textarea name="descripcion" rows="6" class="input-field" placeholder="Contenido y alcance" maxlength="1000"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Áreas Involucradas -->
+        <div class="form-card p-6">
+            <div class="section-title">Áreas Involucradas</div>
+            <div class="space-y-4">
+                <div class="input-group">
+                    <label>Área Reportante</label>
+                    <select name="area_reportante_id" class="input-field" required>
+                        <option value="">Seleccione...</option>
+                        {% for a in areas %}<option value="{{ a.id_area }}">{{ a.nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Área Ejecutora</label>
+                    <select name="area_ejecutora_id" class="input-field" required>
+                        <option value="">Seleccione...</option>
+                        {% for a in areas %}<option value="{{ a.id_area }}">{{ a.nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Área Receptora</label>
+                    <select name="area_receptora_id" class="input-field">
+                        <option value="">Seleccione...</option>
+                        {% for a in areas %}<option value="{{ a.id_area }}">{{ a.nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILA 2: Audiencia + Recursos + Consideraciones -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Audiencia y Entrega -->
+        <div class="form-card p-6">
+            <div class="section-title">Audiencia y Entrega</div>
+            <div class="space-y-4">
+                <div class="input-group">
+                    <label>Audiencia</label>
+                    <select id="audiencia-select" name="audiencia" class="input-field" onchange="toggleReceptorExterno()">
+                        <option value="INTERNA">Interna</option>
+                        <option value="EXTERNA">Externa</option>
+                    </select>
+                </div>
+                
+                <div id="receptor_externo_container" class="input-group hidden">
+                    <label>Receptor Externo <span class="text-red-500">*</span></label>
+                    <input type="text" id="receptor-externo-input" name="receptor_externo" class="input-field" placeholder="Nombre del destinatario" maxlength="200">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label>Formato</label>
+                        <select name="formato_reporte" class="input-field font-semibold" required>
+                            <option value="">Seleccione...</option>
+                            {% for f in formato_er %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Método</label>
+                        <select name="formato_entrega" class="input-field font-semibold" required>
+                            <option value="">Seleccione...</option>
+                            {% for f in formato_e %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Ruta de Destino <span class="text-red-500">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-external-link-alt text-xs"></i>
+                        <input type="text" name="ruta_entrega" placeholder="\\servidor\reportes\archivo.xlsx" class="input-field" required maxlength="500">
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Ruta de red donde se deposita</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recursos (GitLab + PDF juntos) -->
+        <div class="form-card p-6">
+            <div class="section-title">
+                <i class="fas fa-folder-open mr-2"></i>
+                Recursos del Reporte
+            </div>
+            <div class="space-y-4">
+                <div class="input-group">
+                    <label>URL Repositorio GitLab</label>
+                    <div class="input-with-icon">
+                        <i class="fab fa-gitlab"></i>
+                        <input type="url" name="gitlab_url" placeholder="https://gitlab.com/..." class="input-field" maxlength="500">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Plantilla PDF</label>
+                    <input type="file" name="pdf_formato" class="input-field" accept=".pdf">
+                    <p class="text-[10px] text-slate-400 mt-1">Formato base del reporte</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NUEVO: Consideraciones -->
+        <div class="form-card p-6 border-l-4 border-l-amber-500">
+            <div class="section-title">
+                <i class="fas fa-lightbulb mr-2"></i>
+                Consideraciones
+            </div>
+            <div class="input-group">
+                <label>Información Importante</label>
+                <textarea name="consideraciones" rows="8" class="input-field" placeholder="Escribe aquí información importante que otros usuarios deben conocer para entender correctamente este reporte..." maxlength="2000"></textarea>
+                <p class="text-[10px] text-slate-400 mt-1">
+                    <i class="fas fa-info-circle text-amber-500"></i>
+                    Aspectos clave, limitaciones, fuentes de datos, contexto necesario, etc.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILA 3: Programación -->
+    <div class="form-card p-6 border-l-4 border-l-[#1e40af]">
+        <div class="section-title">Programación de Entrega</div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
+            <div class="lg:col-span-4 space-y-4">
+                <div class="input-group">
+                    <label>Frecuencia</label>
+                    <select id="frecuencia" name="frecuencia" onchange="handleFrecuenciaChange()" class="input-field font-bold text-blue-800 bg-blue-50">
+                        <optgroup label="Dinámicas">
+                            <option value="diaria">Diaria</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="mensual">Mensual</option>
+                        </optgroup>
+                        <optgroup label="Ciclos Fijos">
+                            <option value="trimestral">Trimestral</option>
+                            <option value="cuatrimestral">Cuatrimestral</option>
+                            <option value="semestral">Semestral</option>
+                            <option value="anual">Anual</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div id="dyn-area" class="p-4 border rounded-xl bg-gray-50 space-y-3">
+                    <div id="week-box" class="hidden">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-2 block">Días</label>
+                        <div class="grid grid-cols-4 gap-1" id="week-grid"></div>
+                    </div>
+                    <div id="day-box" class="hidden">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-2 block">Días</label>
+                        <div class="grid grid-cols-7 gap-1" id="day-grid"></div>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <div class="flex-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase mb-2 block">Hora</label>
+                            <input type="time" id="rule-time" value="08:00" class="input-field">
+                        </div>
+                        <button type="button" onclick="addRule()" class="btn-add h-[42px] px-4 text-sm">
+                            <i class="fas fa-plus mr-1"></i>Agregar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 bg-gray-50 rounded-xl p-5 border border-dashed border-gray-300 min-h-[280px]">
+                <h4 id="panel-title" class="text-[10px] font-black text-gray-400 uppercase mb-3 tracking-widest">Resumen</h4>
+                <div id="rules-list" class="space-y-2 hidden"></div>
+                <div id="hitos-grid" class="grid grid-cols-2 gap-3 hidden"></div>
+                <div id="empty-state" class="text-center py-12 text-gray-400 italic text-sm">No hay reglas definidas</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILA 4: DEPENDENCIAS (SPLIT VIEW) -->
+    <div class="form-card p-6 border-l-4 border-l-green-600">
+        <div class="section-title mb-4">
+            <i class="fas fa-sitemap mr-2"></i>
+            Este Reporte DEPENDE DE
+        </div>
+        
+        <!-- SPLIT VIEW: Formulario | Lista -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            
+            <!-- Panel Izquierdo: FORMULARIO -->
+            <div class="lg:col-span-2 bg-blue-50 p-5 rounded-xl border-2 border-blue-200">
+                <h4 class="text-xs font-bold text-blue-800 uppercase mb-4">
+                    <i class="fas fa-plus-circle mr-1"></i>
+                    Agregar Dependencia
+                </h4>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="dep-label">Reporte</label>
+                        <select id="reporteSelect" class="dep-input">
+                            <option value="">Seleccione...</option>
+                            {% for r in reportes_activos %}
+                            <option value="{{ r.id_reporte }}" data-codigo="{{ r.codigo_interno }}" data-nombre="{{ r.nombre }}">
+                                {{ r.codigo_interno }} - {{ r.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="dep-label">Tipo</label>
+                            <select id="tipoSelect" class="dep-input">
+                                <option value="DATOS">Datos</option>
+                                <option value="CALCULO">Cálculo</option>
+                                <option value="CONSOLIDACION">Consolidación</option>
+                                <option value="VALIDACION">Validación</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="dep-label">Criticidad</label>
+                            <select id="criticidadSelect" class="dep-input">
+                                <option value="BAJA">Baja</option>
+                                <option value="MEDIA" selected>Media</option>
+                                <option value="ALTA">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="dep-label">Observaciones</label>
+                        <textarea id="observacionesTextarea" class="dep-input" rows="2" placeholder="Detalles opcionales..."></textarea>
+                    </div>
+                    
+                    <button type="button" onclick="agregarDep()" class="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm hover:bg-green-700 transition">
+                        <i class="fas fa-check mr-2"></i>
+                        Agregar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Panel Derecho: LISTA -->
+            <div class="lg:col-span-3 bg-white p-5 rounded-xl border-2 border-gray-200 min-h-[300px]">
+                <h4 class="text-xs font-bold text-gray-600 uppercase mb-4">
+                    <i class="fas fa-list mr-1"></i>
+                    Dependencias Agregadas (<span id="depCount">0</span>)
+                </h4>
+                
+                <div id="depList" class="space-y-2">
+                    <div class="text-center py-8 text-gray-400 italic text-sm">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No hay dependencias agregadas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Campo oculto -->
+        <input type="hidden" id="dependenciasHidden" name="dependencias" value="[]">
+    </div>
+
+    <!-- BOTONES -->
+    <div class="flex items-center justify-end gap-4 pt-2 pb-6">
+        <button type="button" onclick="window.location.href='/catalogos'" class="px-6 py-3 border bg-white text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-50">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-save mr-2"></i> Crear Reporte
+        </button>
+    </div>
+
+</form>
+
+</div>
+</section>
+
+<script>
+function toggleReceptorExterno() {
+    const a = document.getElementById('audiencia-select').value;
+    const c = document.getElementById('receptor_externo_container');
+    const i = document.getElementById('receptor-externo-input');
+    if (a === 'EXTERNA') {
+        c.classList.remove('hidden'); 
+        i.required = true;
+    } else {
+        c.classList.add('hidden'); 
+        i.required = false; 
+        i.value = '';
+    }
+}
+
+document.getElementById('reporteForm').addEventListener('submit', function(e) {
+    const a = document.getElementById('audiencia-select').value;
+    const r = document.getElementById('receptor-externo-input').value.trim();
+    if (a === 'EXTERNA' && !r) {
+        e.preventDefault(); 
+        alert('Ingrese el receptor externo'); 
+        document.getElementById('receptor-externo-input').focus(); 
+        return false;
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/reporte.js') }}"></script>
+{% endblock %}
